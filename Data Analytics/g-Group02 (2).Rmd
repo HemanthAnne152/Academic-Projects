@@ -1,0 +1,1570 @@
+---
+title: "BUS SERVICES PROJECT- DATA ANALYTICS"
+
+subtitle: Group no 02
+
+header-includes:
+- \usepackage{titling}
+- \pretitle{\begin{center}\LARGE\includegraphics[width=08cm]{logo.png}\\[\bigskipamount]}
+- \posttitle{\end{center}}
+
+author: |
+  | Pankaj Sharma (6708189)    
+  | Varun Gopi Thellapelly (6715684)    
+  | Varun Ramakrishna (6696304)    
+  | Hemanth Anne (6713268)
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |  
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |
+  |  
+  |
+  |
+  |
+  |
+  
+
+output:
+  bookdown::pdf_document2: default
+toc: true
+    
+csl: apa.csl
+bibliography: References.bib
+---
+\newpage
+  
+# Executive Summary
+  The aim is to predict the number of passengers due to Knowledge Transfer Partnership between Surrey County Council and the University of Surrey for both new and existing routes across Surrey as seen in Figure 1. To analyse the data a bus operator of A, B, C are taken with distinct bus service numbers operated among numerous routes. To get the information about bus stops and train stations National public transport access node (NaPTAN) has been used. 1.16M is the total population used in the database and including the buffer it went up to 1.86M and there is on average 2.41 people per household, with 481.4K domestic delivery points (households).   
+
+Firstly, to get the live data of bus services the Bus service database is loaded into Pgadmin using hostname and maintenance database. Once the connection is established overview map is obtained by using geometry viewer. Since live data cannot be manipulated, a new database is created and loaded with live data. Bus service data is restored in the newly created database with Essential passenger and model data are in aggregated form in two tables i.e., routes_aggr_distinct and routes_daily_distinct. Where routes_agg_distinct is used for modeling and routes_daily_distinct is used for visualization. To visualize the data routes_daily_distinct is imported to Power BI Data insights of dataset we visualized graphs such as Time series of different variables and with forecast analysis, average number of passengers with respective bus routes and passengers on peak and off-peak hours, and to forecast accuracy.  
+
+To understanding the relationship in between attributes Correlation matrix was used for the routes_agg_distinct. Since the performance of highly correlated attributes is same, we have considered either one of them. To reduce the positive, negative skewness and to remove the outliers in the probability distribution curve we have used logged versions of variables. we have also used pre-processing methods to filter out the data from the dataset. To predict the Dependent variable Linear Regression Model, Decision Tree, Random Forest etc. are used for modeling. The Linear Regression model was used to understand the relationship between variables and in studying their effect. To analyze the data set, Data mining techniques and exploration were used.  
+
+![Geometric view of Bus routes in Surrey](surrey overview map.png)  
+
+# Literature Review  
+
+With the rise of vehicles all around, traffic congestion is considered as a significant issue and to estimate the travel time of transportation by bus and to reduce traffic pressure this paper has developed Intelligent Public Transportation Systems (IPTS). (@ma2019bus)     
+
+With the help of learning bus transit and dwell times from independent underlying patterns based on heterogeneous traffic data, this paper proposes a unique segment-based approach for estimating bus travel times. Prediction accuracy can be improved by reducing dwell time uncertainty and dividing bus trips into regular and irregular traffic conditions. (@hojati2016reprint)      
+
+In this study, we will be introduced to a segment-based bus travel time prediction method using an artificial neural network (ANN). This is a common method for solving complex nonlinear problems commonly used to predict travel time. For route construction, the two ANN models used to estimate bus arrival times are link-based and stop-based (@chien2002dynamic) Due to the length of the bus route, previous models used different route design approaches to divide the route into segments and predict the travel time for each segment.   
+
+To improve the quality and productivity for passengers, a sufficient number of buses with required amount of seating spaces should be provided to make their travel safe and comfortable (@sheu2005fuzzy). To provide uniform bus service either not uncrowded nor overcrowded, the Paper proposes a BusGrid system that addresses this problem by modifying timetables on a regular basis to maintain a roughly constant average number of people on board.   
+
+Bus Grid gathers and interprets real-time data from automated vehicle location (AVL) and automated passenger counting (APC) sensors put on buses to help their operators improve bus timetables and build new bus routes and stops based on anticipated demand (@samaras2015prediction).   
+The Bus Grid RL-bus system will utilise these predictions to develop and assess additional bus stops or routes that were not present in the original dataset. The prediction algorithm can also be used to evaluate and improve existing bus routes and stations.   
+
+A variety of criteria are considered when passengers pick transit as a form of transportation. Passengers desire a dependable service that comes on time, with minimal time spent in the vehicle and minimal entry and transit times. Where number of transit agencies already used AVL and APC systems (@crout2007accuracy).
+To boost the customer satisfaction and to cut the run time, one of the most successful ways is to implementing Limited stop service or express bus service (@conlon2001successful).   
+According to this analysis, introducing a limited-stop service would result in significant time savings for both the new limited service and the old regular route, which would run in parallel. Many transit agencies across the world have introduced automatic vehicle locating (AVL) and automatic passenger counts to improve decision-making and fleet management (APC)(@tetreault2010estimating).   
+
+
+# Data Explanation & Preparation   
+
+![Features used](feaatures.png){width=70%}    
+ 
+The predictors (factors, features, variables) and passengers response variable are shown in the below output shown in Figure 2&3. The objective is to develop models that can forecast the number of passengers depends on the factors listed above.   
+
+![Significance level of variables](Importance.png){width=90%}   
+
+The data covers the period from November 30, 2015, to September 30, 2018, and includes about 45.4 million passenger travels.   
+
+## Pre- Processing of data   
+
+### Weekday vs Weekend:    
+
+![Passengers on weekdays and weekends](passengers by week.png){width=40%, height=30%}
+
+In the given route daily, distinct dataset weekday is divided between two categories which is weekends and weekdays. From this these are defined as Monday-Friday weekdays and Saturday-Sunday as weekends. The below graph in Figure 4 shows the passengers percentage with respect to given period.   
+
+![Passengers by days](weekdays volume.png){width=70%}
+
+It is evident from the above graph that passengers are travelling more on weekdays compared to weekends and number of observations are significantly higher in weekday. So, in the feature selection we used weekdays to sort the dataset in route aggregate distinct. For clear understanding redefined model is used by filtering them into days (Monday-Sunday) as shown in Figure 5. 
+
+
+### Peak vs Off-peak:   
+
+Peak hours are the times where demand of the bus services is high and Off-peak hours are the times where the demand of the services is less. We have taken peak & Off-peak with respect to passengers on weekdays as well as weekends. It is evident from the below graph in Figure 6 that during weekdays the number of passengers is greater on peak hours compared to weekends. Same results are shown in weekends also. Since the observations on peak hours are too high we have taken On-peak category for sorting the route aggregate dataset in feature selection.
+
+![Passengers on weekdays and weekends](passenger by weekday peak.png){width=30%, height=30%} 
+
+### Categorical Value:   
+
+For the modelling process bus operator is not considered for feature selection as this attribute is in string format. Route variable in the dataset is in categorical form because each route is defined with a unique value and peak, weekday was also not considered for feature selection as the data is previously sorted according to On-peak and weekdays category.    
+
+## Selected Features    
+
+### Passengers:    
+In the given data set of daily bus services, the passenger numbers are averaged values generated from personal ticket statistics. By sorting the data by route, weekday, and peak, the data was shortened to 57,834 entries. The following are summary statistics for the dataset:    
+
+![](Summ pass.png){width=50%}   
+ 
+75% of these groupings have fewer than 1023 passengers. The profile in Figure 7 focuses on daily routes the number of passengers. Also, 786 passengers in average travel through these routes per day and on average, 50% of all routes have less than 282 passengers every day.   
+
+![Statistical histogram for passengers](Pass histo.png){width=90%} 
+
+### Headways:
+The independent variable headway is the averaged time difference in seconds between successive buses along the same route throughout a day. The following are the statistical summary:
+ 
+![](headway stats.png){width=50%}
+
+The 50 percent threshold for daily peak/off-peak routes is 1,632.8 seconds (27.2 mins) headway. The average time is 2302.8 seconds (38.4 mins). Figure 8 depicts a distribution that is almost exponential. During the day, the longest headway is 9.8 hours. On the other end of the spectrum is a route with a one-second headway, which could indicate that buses follow each other resulting in increase in deviation (Figure 8).
+
+![Statistical histogram for headway](headway hist.png){width=90%} 
+
+### Deviation:
+The difference between the expected and scheduled arrival of the bus at a halt is known as deviation. The mean deviation of absolute differences for a day is used in this case. This value is given in seconds.
+
+![](deviation summ.png){width=50%}
+ 
+All variations are lower than 145.6 seconds in 50% of cases (2.4 mins). 12516.1 seconds is the highest deviation (3.5 hours). The average deviations that are less than 205.4 seconds are shown in Figure 9. (3.4 mins). Shorter deviations are more likely to happen.
+
+![Statistical histogram for deviation](deviation hist.png){width=90%}
+
+### Hospitals & Train stations:
+The number of hospitals within an 800-meter radius of the route is referred to as the hospital count. The hospitals in Surrey County and those near its boundary were used in this analysis.
+
+![](Hospitals summ.png){width=60%}
+ 
+The number of railway stations within 800 meters of the route is referred to as train-stations.
+
+![](TS summ.png){width=60%}
+ 
+
+## New derived & transformed features
+The modelling methods use natural logarithm versions of variables like headway_avg and deviation_avg since their natural value measured in seconds are huge, and the logged form i.e., log_headway_avg and log_deviation_avg reduces the skewness of those variables and will also improve the linearity between independent and dependent feature.
+
+## Correlation Matrix
+In the analysis of the bus service daily dataset, a listwise correlation matrix has been generated as soon in Table 1 with 57,834 observations. As we can see in the below table in Figure 10 that we are unable to get the correlation of headway with any other variable. This is due to the missing values in the observations of headway. 
+
+![Correlation matrix for daily route data](Corr daily.png){width=70%}
+
+As a result, the route data was grouped by bus operator, peak, route, & weekday. For passengers, headways, and deviations, the daily averages were aggregated again, and the standard deviation of the daily averages was calculated. The correlation matrix for the aggregated data of weekdays at peak time is shown in below table(Figure 11) with only 87 observations. 
+
+![Correlation matrix for aggregated route data](Corr m.png){width=70%}
+
+The following observations can be drawn from Table 2's correlation matrix:
+•	We can see that the strongest positive correlation of passengers, 22. 25%, is with train stations, indicating that bus passengers will increase with increase in number of trains stations in the route.
+•	Whereas the highest negative correlation of 23.67 % is between passengers and headway and also there is a high negative correlation between passengers and deviation i.e., 19.91% which means that decrease in headway and deviation between buses will lead to increase in bus passengers. 
+•	In addition, we can see that households are strongly linked to hospitals and train stations i.e., 71.67% & 77.46% respectively, implying that routes travelling through densely populated regions also pass by a large number of hospitals and train stations.
+
+
+# Data Visualisation
+
+## Density / histogram plots
+ The skewness of the graph, which indicates the asymmetry of a variable's probability distribution around its mean, can be used to depict the distribution of the variables.
+
+### 4.1.1	Passenger distribution plot:
+The graph in Figure 12 demonstrate the skewness of the dependent variable passengers_avg. The passenger_avg is positively skewed which means their mean>median>mode. 
+
+![Passenger distribution plot](Passenger density.png){width=50%}
+
+### Headway vs Ln(headway) distribution plot:
+
+![Headway distribution plot](Headway density.png){width=50%}
+
+![Ln(headway_avg) distribution plot](Log headway density.png){width=50%}
+
+We can clearly notice the difference in the distribution of headway_avg and Ln(headway_avg) from Figure 13 & 14.  Figure 13 shows the positive skewness in the density of headway_avg variable.
+
+
+### Deviation vs Ln(deviation) distribution plot:
+It is evident from the below graphs in Figure 15 & 16 that probability distribution is positively skewed and can conclude that most of outliers are on right side of distribution curve.
+
+Also, this curve shows mean is greater than median and mode in this skewness.
+
+
+![Deviation distribution plot](Deviation density.png){width=50%}
+
+After applying ln to average of deviation we get the normal distribution curve which shows no skewness which indicates that there are no outliers in this variable.
+
+![Ln(deviation_avg) distribution plot](Log deviation density.png){width=50%}
+
+### Train station distribution plot:
+Below graph in Figure 17 tells train station attribute is positively skewed and causes mean to be larger than median and mode.
+
+![Train station distribution plot](train station density.png){width=50%}
+
+## Correlation Plot
+
+![Correlation plot for aggregated route data](Correlation plot3.png){width=90%, height=90%}
+
+The stars in the correlation plot seen in Figure 18 represents the statistical significance level of the variable with each other. In the aggregated dataset for weekday at peak time, we can observe that headway and train stations are significant with the bus passengers at 0.05 P-value. That is with 95% confidence we can say that there is a significant correlation of headway and train stations with the number of bus passengers traveling in a route during the peak time of weekdays.
+
+Also, from the heat map plot for correlation in Figure 19 we can see that households, hospitals and train stations are significantly correlated to each other. 
+
+![Heatmap plot for Correlation](Correlation plot2.png){width=50%}
+
+
+## Time series analysis with forecasting:
+
+### Time series of deviation:
+Time series analysis give graphic and numeric output and it can be used to make informed predictions of future values.
+
+![Timeseries forecast of deviation](time-series of deviation.png){width=80%}
+
+From the above graph in Figure 20 we can see the increase in deviations from Jan 2016 to Sep 2018.
+After Sep 2018 we can see the forecast of the ten months in time series of deviation based on the previous years which shows with 95% confidence level that deviations will increase within the shaded region.
+
+
+### Time-series of headway
+The above graph in Figure 21 tells the time series of headway with forecasting.
+From Jan 2016 to Sep 2018 we can the rise of headway which tells that time difference between two buses on same day is increased over a period of time.
+From the forecasting we can say that with 95% confidence level there will decrease in headway in Nov 2018 and rise in Jan 2019 and it lies within the given range.
+
+![Timeseries forecast of headway](time-series of headway.png){width=80%}
+
+### Time-series of passengers:
+
+![Timeseries forecast of passengers](time-series of passengers.png){width=80%}
+
+Above graph in Figure 22explains the time-series of passengers by years.
+We can observe that from Jan 2016-Sep 2018 the average number of passengers are increased and from the forecasting we can say there will be steady line for next 10 months (i.e. Sep2019-Jul 2019) with 95% CI.
+
+## Data Insights
+
+### Passengers by bus-operator routes:
+
+![Passengers by bus routes](passengers by bus routes.png){width=80%}
+
+The bar graph in Figure 23 shows  the number of passengers taking various bus operator routes.
+From the above graph we can observe that Bus-operator A with the route 100 is majorly used by customers and Bus-operator A-20, C-6001 are also used by the average number of customers.
+Route 5801, bus-operator C have lowest count of passengers travelling through that route.
+
+![Passenger,headway,deviation by bus routes](passenger,headway,deviation by bus routes.png){width=80%}
+
+The graph above in Figure 24 explains about the different bus-operators route taken by the passengers, headway and the deviations.
+Headway is defined as the time difference between the two consecutive buses travelling in same route on same day.
+Deviation tells the delay time in seconds from actual arrival time of buses and we can observe that there are less deviations in the bus-operator routes.
+
+## Forecast accuracy
+
+![Forecast accuracy](Forecast Accuracy table.png){width=70%}
+
+To get forecast accuracy of passengers in Power BI analytics we used the following procedures.
+
+Here we did time-series analysis for passengers from 2016 to 2017 and forecast analysis for 2018 to got forecast accuracy for 2018th year by dividing actual year with forecast year which can be observed from the above table in Figure 25.
+The outcomes of both forecast and actual data of number of passengers can be seen in Figure 26.
+
+***
+
+![Forecast camparison with actual data](Forecast Accuracy1.png){width=80%}
+
+
+
+
+# Prediction/Classification Methods
+
+<div align="left">The use case is defined as predicting the passengers to the new and the existing bus routes. We can observe that the dependent variable ‘Passengers_avg’ obtained from the aggregate data can be grouped based on the independent factors such as the peak/off-peak hours, either weekdays or weekends. From investigating the aggregated data of distinct routes, the ‘passengers_avg’ data is observed to be continuous data.</div> 
+The features determining the dependent variables are as follows:
+
+*	Passengers_sd
+*	Headway_avg
+*	Headway_sd
+*	deviation_avg
+*	deviation_sd
+*	households
+*	hospitals
+*	train_station
+*	len
+
+
+The algorithms significantly used to predict the continuous data are the supervised machine learning models. The algorithms used in the prediction are as follows:
+
+1. **LINEAR MODEL:** Linear model describes the dependent variables in terms of linear combination of independent variables
+2.	**LINEAR REGRESSION MODEL:** Theoretically the linear model and linear regression model can be defined as the same concept, but the calculation involved in the square root error is different.
+3.	**DECISION TREE:** The model constitutes of distribution of trees evaluating all possible consequences based on certain given parameters. On each node of the decision tree, a condition is taken to evaluate all possible outcomes.
+4.	**RANDOM FOREST:** This is an algorithm that constructs multiple decision trees at the training period. In our case, the mean of the predictions of all the decision tree is returned
+5.	**SUPPORT VECTOR MACHINE:** It is a supervised learning algorithm mainly used in regression, outlier detection and classification problems. The data points are the support vectors that impact the orientation of the hyperplane.
+6.	**NEURAL NETWORKS:** IT can be explained as a system of artificial neurons that mimic the human brain in a similar way using the number of algorithms to establish data relationship .
+***
+
+##  Models with Balancing ratio 0.7
+![(#fig:bi) Method 1 Model evaluation results](tab1-b-0.7-m1.png){width=60%}
+
+\newpage
+
+**Insights from Method 1 model evaluation:**
+
+**Linear Model:** From the Method 1 Figure \@ref(fig:bi), RMSE value of 674.2 is obtained with a MAPE value of 60.9%. from figure \@ref(fig:bj), it can be observed that the error between the predicted and actual value is less from 0 to 2000. The predicted value error is comparatively more from 3000.
+
+![(#fig:bj) LM plot of predicted values vs actual values ](b-0.7-m1-lm.png){width=60%}
+
+
+**Linear Regression model:** From our model results described in Figure \@ref(fig:bi) , the value of RMSE is observed to be 762 and MAPE 85.7%. From figure \@ref(fig:bk) , it can be observed that the values from o to 1500 are predicted more precisely or the mean square root error is less. The error distance is between predicted and actual values is more from 1500 to 3500.
+
+
+![(#fig:bk) LR scatterplot of predicted values vs actual values ](b-0.7-m1-LR.png){width=60%}
+
+
+
+**Decision Tree:**  From our model results Figure \@ref(fig:bi), the RMSE is 1054.8 and the MAPE value is 114.1%. From \@ref(fig:bl), it can be observed that the values from 0 to 1000 are having a partial considerable error distance between predicted and actual values, whereas from 1000 the error range is considerably large.
+
+![(#fig:bl) DT plot of predicted values vs actual values ](b-0.7-m1-dt.png){width=60%}
+
+
+**Random Forest:** From the Figure \@ref(fig:bi), it is clear that RMSE value is 916.3 and MAPE is 163.2 %. From figure \@ref(fig:bm), it can be observed that the mean error between the region 0 to 1000 is less, whereas the errors in other regions are comparatively large.
+
+![(#fig:bm) RF plot of predicted values vs actual values ](b-0.7-m1-rf.png){width=60%}
+
+**Support vector machine:** From Figure \@ref(fig:bi), it is observed that RMSE value is 710 and MAPE is 75.9 %. From figure \@ref(fig:bn), it can be examined that values from o to 3000 have a comparatively minimum square root error distance with respect to points after 3000.
+
+![(#fig:bn) SVM plot of predicted values vs actual values ](b-0.7-m1-svm.png){width=60%}
+
+**Neural Network:** From Figure \@ref(fig:bi) , it is observed that there are two neural network models run. The first model is multi-layered feed forward neural net run using the neural net library and the second model is run using the first model with more hidden layers to increase the precision of the output and reduce errors. Figure \@ref(fig:bo) and figure  \@ref(fig:bp) show the neural network plots of both the models referred in Figure  \@ref(fig:bi). From Figure  \@ref(fig:bi), the RSE value of both models is 0.1609 and 0.0286. the correlation between the predicted and actual value is also observed to improve from 0.78 to 0.99. Figure  \@ref(fig:bq) and figure  \@ref(fig:br) show the decrease in the mean error in predicted and actual values from the first NN model to the next retrained NN model.
+
+![(#fig:bo)  neural network plot of Neural network 1 model ](b-0.7-m1-nn1.png){width=60%}
+
+![(#fig:bp)  neural network plot of Neural network 2 model ](b-0.7-m1-nn3.png){width=60%}
+
+![(#fig:bq)  neural network model1  plot of predicted vs actual ](b-0.7-m1-nn2.png){width=60%}
+
+![(#fig:br)  neural network model2  plot of predicted vs actual ](b-0.7-m1-nn4.png){width=60%}
+
+ ***
+ 
+## Model with feature construction
+
+The method follows applying logarithmic transformation to headway_avg and deviation_avg to reduce the skewness and normalize the data. Thus, new features log(headway_avg) and log(deviation_avg) is constructed. 
+Feature construction: log(headway_avg) and log(deviation_avg)
+Feature eliminated: headway_avg, deviation_avg
+
+![(#fig:ai) METHOD 2 MODEL EVALUATION RESULTS ](tab2-b-0.7-m2.png){width=60%}
+
+**Insights:**
+
+• From  \@ref(fig:ai), it can be inferred that Linear model and SVM have the minimum RMSE compared to other models with values 666.2 and 695.8.
+
+• From \@ref(fig:ai), it is observed that NN models have a RMSE value of 0.2192 and 0. 0316.The prediction error is comparatively small proved with correlation increase from NN-1 to NN-2 with values 0.22 to 0.98.
+
+• Following figures from figure \@ref(fig:aj) to Figure \@ref(fig:an) describe the square root of distance of error between predicted and actual values obtained .
+
+• Figure \@ref(fig:am) shows the significance level predicted using the random tree model.
+
+• Figure \@ref(fig:ao) & Figure \@ref(fig:ap) visualise the neural network model 1 and 2. Figure \@ref(fig:aq) and Figure \@ref(fig:ar) show us the predicted vs actual plot to examine the prediction error
+
+![(#fig:aj) LM plot of predicted values vs actual values ](b-0.7-m2-lm.png){width=60%}
+
+![(#fig:av) LR plot of predicted values vs actual values ](b-0.7-m2-LR.png){width=60%}
+
+![(#fig:ak) DT plot of predicted values vs actual values ](b-0.7-m2-dt.png){width=60%}
+
+![(#fig:al) RF plot of predicted values vs actual values ](b-0.7-m2-rf.png){width=60%}
+
+
+![(#fig:an) SVM plot of predicted values vs actual values ](b-0.7-m2-svm.png){width=60%}
+
+![(#fig:aq) NN1 plot of predicted values vs actual values ](b-0.7-m2-nn2.png){width=60%}
+
+![(#fig:ar) NN2 plot of predicted values vs actual values ](b-0.7-m2-nn4.png){width=60%}
+
+![(#fig:ao) NN1 plot  ](b-0.7-m2-nn1.png){width=60%}
+
+![(#fig:ap) NN2 plot  ](b-0.7-m2-nn3.png){width=60%}
+
+![(#fig:am) Random tree predictor significance](b-0.7-m2-rf impor.png){width=70%}
+
+## Model with different feature set
+
+This method involves eliminating deviation aggregate values of headway and deviation. The new features constructed log(headway_avg) and log(deviation_avg) is used in the predictors.
+
+**Feature construction:**  log(headway_avg) and log(deviation_avg)
+
+**Feature elimination:** headway_avg, deviation_avg, headway_sd, deviation_sd
+
+![(#fig:Ci) METHOD3 MODEL EVALUATION RESULTS ](tab3-b-0.7-m3.png){width=60%}
+
+**Insights:**
+
+* From Figure \@ref(fig:ci), it is observed that LM, LR and SVM have a comparatively lesser RMSE values of 677.5,766.8,688.6 and MAPE values of 74.5%,92.5% and 76.9%.
+
+* From Figure \@ref(fig:ci), the NN models 1 and 2 have a decreasing RMSE of 0.1641 to 0. 0335.We can observe that the correlation between the predicted and actual values has also increased which explains reduce in prediction error.
+
+![(#fig:dj) LM plot of predicted values vs actual values ](b-0.7-m3-lm.png){width=60%}
+
+![(#fig:dk) LR plot of predicted values vs actual values ](b-0.7-m3-lr.png){width=60%}
+
+![(#fig:dl) DT plot of predicted values vs actual values ](b-0.7-m3-dt.png){width=60%}
+
+![(#fig:dm) RF plot of predicted values vs actual values ](b-0.7-m3-rf.png){width=60%}
+
+![(#fig:dn) SVM plot of predicted values vs actual values ](b-0.7-m3-svm.png){width=60%}
+
+![(#fig:do) NN1 plot of predicted values vs actual values ](b-0.7-m3-nn2.png){width=60%}
+
+![(#fig:dp) NN2 plot of predicted values vs actual values ](b-0.7-m3-nn4.png){width=60%}
+
+
+## Models with Balancing ratio 0.8
+
+In the model evaluation, the balancing ratio of 0.8 is taken i.e., 68 data points is used for training the model and 19 data points used to test the model which constitutes a total of 87 data points. Three methods are followed after considering the features based on the predictor importance. Considering a different balance ratio, the regression models and neural network models are evaluated to observe the difference in the error values.
+
+
+**Insights:**
+
+* From the three methods used in the type B model building and evaluation, it can be observed that SVM and LM models have the least RMSE values comparatively.
+
+* The neural network models have an increasing correlation between the predicted and actual passenger values with decrease in the error.
+*	The odd error values are primarily because of a small dataset with less testing data.
+* The graphs of predicted values vs actual values for all executed models is available in the appendix.
+
+These methods and results are shown in the figure below:
+
+![(#fig:ei) METHOD 1 MODEL EVALUATION RESULTS ](tab1-b-0.8-m1.png){width=60%}
+
+![(#fig:ej) METHOD 2 MODEL EVALUATION RESULTS ](tab2-b-0.8-m2.png){width=60%}
+
+![(#fig:ek) METHOD 3 MODEL EVALUATION RESULTS ](tab3-b-0.8-m3.png){width=60%}
+
+\newpage
+
+# Conclusion
+
+To conclude, in this report we were able to evaluate different visualization methods and classification models to achieve our aim to increase the count of bus passengers on same day in the same existing and new bus routes.
+
+# Appendix
+
+**1) Connecting to Bus Service Database in PostGre**
+
+![Connecting to Bus Service Database in PostGre](BusService dataset.png){width=95%}
+
+
+**2) Bus routes with Geometry view**
+
+![Bus routes with Geometry view](BusService with geometry view.png){width=95%}
+
+\newpage
+**3)Importing bus service database into a new database**
+
+![Importing bus service database into a new database](New Database.png){width=95%}
+
+**4)Queries for altering variables in route_aggr_distinct**
+
+![Queries for altering variables in route_agg_distinct](altering variable in routes_aggr.png){width=95%}
+
+\newpage
+
+**5)Queries to sort passengers by weekdays & peak**
+
+![Queries to sort passengers by weekdays & peak](passengers by weekday and peak.png){width=80%}
+
+**6)Queries to sort passengers by bus_operators and routes**
+
+![Queries to sort passengers by bus_operators and routes*](passengers by bus_operator and routes.png){width=80%}
+
+\newpage
+
+**7)Importing data into PowerBI**
+
+![Importing data into PowerBI](importing data into Power BI.png){width=95%}
+
+**8)Visualization using Power Bi**
+
+![Visualization using Power Bi](Power BI pic1.png){width=95%}
+
+**9) R codes for Correlation matrix and plots**
+```
+# prepare data (for a specific group)
+S = readRDS('routes_aggr.rds')
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(bus_operator, route, peak, weekday))
+
+# explore data
+
+####correlation matrix
+u.cor=cor(U)
+view(cor(U))
+write.csv(u.cor,'C:\\Users\\vt00196\\OneDrive - University of Surrey\\Desktop
+\\bus service\\outputs\\cor.csv')
+install.packages("corrplot")
+library(corrplot)
+corrplot(u.cor)
+pairs(u.cor)
+
+
+####correlation plot 1
+library(corrplot)
+corrplot(cor(U),        # Correlation matrix
+         method = "shade", # Correlation plot method
+         type = "full",    # Correlation plot style (also "upper" and "lower")
+         diag = TRUE,      # If TRUE (default), adds the diagonal
+         tl.col = "black", # Labels color
+         bg = "white",     # Background color
+         title = "",       # Main title
+         col = NULL)   
+
+####correlation plot 2
+p_load(GGally)
+ggpairs(U) 
+
+####correlation plot 3
+library("GGally")
+
+my_fn <- function(data, mapping, pts=list(), smt=list(), ...){
+  ggplot(data = data, mapping = mapping, ...) + 
+    do.call(geom_point, pts) +
+    do.call(geom_smooth, smt) 
+}
+ggpairs(U[, 1:10], 
+        lower = list(continuous = 
+                       wrap(my_fn,
+                        pts=list(size=1, colour="blue"), 
+                        smt=list(method="lm", se=F, size=1, colour="black"))),
+)
+```
+
+**10) R Codes for Density distribution plots** 
+```
+S=read.csv("C:\\Users\\ps01114\\OneDrive - University of Surrey\\
+Desktop\\BA 1st sem\\DA\\Bus Assessment\\Outputs\\op.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+
+#Density plot for deviation
+hist(S$deviation_avg, 
+     col = c("#009999"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Deviation Distribution Plot", 
+     xlab="Deviation",
+     ylim=c(0, 0.007)) 
+lines(density(S$deviation_avg),lwd = 2, col = "red")
+
+#Density plot for headway
+hist(S$headway_avg, 
+     col = c("#009999"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Headway Distribution Plot", 
+     xlab="Headway",)
+lines(density(S$headway_avg),lwd = 2, col = "red")
+
+#Density plot for passenger
+hist(S$passengers_avg, 
+     col = c("#009999"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Passenger Distribution Plot",
+     xlab="Passenger")
+lines(density(S$passengers_avg),lwd = 2, col = "red")
+
+#Density plot for log_headway_avg
+hist(S$lghd, 
+     col = c("#CCFF00"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Ln(headway_avg) Distribution Plot",
+     xlab="Ln(headway_avg)")
+lines(density(S$lghd),lwd = 2, col = "red")
+
+#Density plot for log_deviation_avg
+hist(S$lgdv, 
+     col = c("#CCFF00"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Ln(deviation_avg) Distribution Plot",
+     ylim = c(0,1.2),
+     xlab="Ln(deviation_avg)")
+lines(density(S$lgdv),lwd = 2, col = "red")
+
+#Density plot for Train stations
+hist(S$train_stations, 
+     col = c("#009999"),
+     border = "black", 
+     prob = TRUE, 
+     main = "Train station Distribution Plot", 
+     xlab="Train station")
+lines(density(S$train_stations),lwd = 2, col = "red")
+```
+
+**11) R codes for Summary and Frequency Histograms of variables**
+```
+library (readxl)
+library (readr)
+library(dplyr)
+library(ggplot2)
+df<- read.csv("C:\\Users\\ps01114\\OneDrive - University of Surrey\\Desktop
+\\BA 1st sem\\DA\\Bus Assessment\\routes_daily_distinct.csv")
+dx<-select(df, passengers,route,day,weekday,peak )
+
+##summary of passengers
+summary(df$passengers)
+dx2<- group_by(dx, route,day,weekday,peak)
+summary(dx2$passengers)
+
+#histogram of passengers grouped by route,day,peak, weekday
+hist(dx2$passengers, col= "yellow", main="Histogram for Passengers",
+        xlab="Passengers by grouping by route, peak, day and weeekday")                                 
+abline(v = mean(dx2$passengers),                    # Add line for mean
+       col = "red",
+       lwd = 3)
+text(x =mean(dx2$passengers) * 2.6,                 # Add text for mean
+     y = mean(dx2$passengers) * 30,
+     paste("Mean =", mean(dx2$passengers)),
+     col = "red", 
+     cex = 1)
+abline(v = median(dx2$passengers),                  # Add line for median
+       col = "red",
+       lwd = 3)
+text(x =median(dx2$passengers) * 3.8,               # Add text for median
+     y = median(dx2$passengers) * 50,
+     paste("Median =", median(dx2$passengers)),
+     col = "red",
+     cex = 1)
+
+##headways in seconds
+summary(df$headway)
+hist(df$headway,
+       col= "light blue", main="Histogram for Headway", xlab="Headway")                                
+abline(v = mean(df$headway, na.rm= TRUE),                # Add line for mean
+       col = "red",
+       lwd = 3)
+
+text(x =mean(df$headway, na.rm= TRUE) *2.4,             # Add text for mean
+     y = mean(df$headway, na.rm= TRUE) *8,
+     paste("Mean =", mean(df$headway, na.rm= TRUE)),
+     col = "red",
+     cex =1)
+abline(v = median(df$headway, na.rm= TRUE),             # Add line for median
+       col = "red",
+       lwd = 3)
+text(x =median(df$headway, na.rm= TRUE) *2.6,           # Add text for median
+     y = median(df$headway, na.rm= TRUE) *16,
+     paste("Median =", median(df$headway, na.rm= TRUE)),
+     col = "red",
+     cex = 1)
+
+##deviation in seconds
+summary(df$deviation)
+hist(df$deviation, 
+       col= "light blue", main="Histogram for Deviation", xlab="Deviation")                             
+abline(v = mean(dx2$passengers),                    # Add line for mean
+       col = "red",
+       lwd = 3)
+text(x =mean(dx2$passengers) * 2.6,                 # Add text for mean
+     y = mean(dx2$passengers) * 30,
+     paste("Mean =", mean(dx2$passengers)),
+     col = "red", 
+     cex = 1)
+abline(v = median(dx2$passengers),                  # Add line for median
+       col = "red",
+       lwd = 3)
+text(x =median(dx2$passengers) * 3.8,               # Add text for median
+     y = median(dx2$passengers) * 50,
+     paste("Median =", median(dx2$passengers)),
+     col = "red",
+     cex = 1)
+
+summary(df$train_stations)
+summary(df$hospitals)
+
+```
+
+**12) R Codes for Feature significance level**
+```
+set.seed(7)
+#library(olsrr)
+library(pacman); p_load(tidyverse)
+# load the library
+#install.packages("mlbench")
+library(mlbench)
+library(caret)
+
+# prepare training scheme
+control <- trainControl(method="repeatedcv", number=10, repeats=3)
+# train the model
+S=read.csv("C:\\Users\\ps01114\\OneDrive - University of Surrey\\Desktop
+           \\BA 1st sem\\DA\\Bus Assessment\\Outputs\\op.csv")
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+UU = T %>% dplyr::select(-c(X,bus_operator, route, peak, weekday))
+aa<- data.frame(UU)
+model <- train(passengers_avg~., data=aa, method="lm"
+               , preProcess="scale", trControl=control)
+# estimate variable importance
+importance <- varImp(model, scale=FALSE)
+# summarize importance
+print(importance)
+# plot importance
+plot(importance)
+```
+
+**13) R codes for Method 1-Balancing ratio-0.7 models**
+```
+list.files()
+# Initialise
+cat('\14'); rm(list=ls());graphics.off(); 
+# source('easyDBaccess.R'); saveRDS(df, "routes_aggr.rds")
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1")
+#setwd(dirname(getwd()))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+      mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, y
+h=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+         mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+# prepare data (for a specific group)
+#S = readRDS('routes_aggr.rds')
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, weekday))
+
+# define train (and test) rows
+nr = length(unique(T$route)); nt=floor(.7*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+summary(b)
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, 
+       subset=train, importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+
+#####neural network models
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, weekday))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+      yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',
+        frmse(y,yh),', mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:60,]
+concrete_test<-concrete_norm[60:87,]
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:10])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', 
+      pch=16, ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) 
+/nrow(concrete_test)) ^ 0.5 
+cor(predicted_strength,concrete_test$passengers_avg)
+
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:10])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+       ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) 
+/ nrow(concrete_test)) ^ 0.5cor(pred_strn_5,concrete_test$passengers_avg)
+
+# SSE has reduced and training steps 
+had been increased as the number of nuerons 
+# under hidden layer are increased
+
+```
+
+**14) R Code for Method 2-Balancing ratio-0.7 mode**
+```
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, 
+     weekday,headway_avg,deviation_avg))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+     yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),',
+      mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+nr = length(unique(T$route)); nt=floor(.7*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+summary(b)
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, 
+      subset=train, importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+######neural network models#####
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, 
+      weekday,headway_avg,deviation_avg))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+      yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+      mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:60,]
+concrete_test<-concrete_norm[60:87,]
+
+
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:10])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', 
+      pch=16, ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) / 
+     nrow(concrete_test)) ^ 0.5
+cor(predicted_strength,concrete_test$passengers_avg)
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:10])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+      ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(pred_strn_5,concrete_test$passengers_avg)
+
+# SSE has reduced and training steps had been increased as the number of nuerons 
+# under hidden layer are increased
+
+```
+
+**15) R codes for Method 3-Balancing ratio-0.7 models**
+```
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1")
+source("HumanNumbers.R")
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak,
+       weekday,headway_avg,deviation_avg,headway_sd,deviation_sd))
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+      yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+            mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+nr = length(unique(T$route)); nt=floor(.7*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+summary(b)
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, subset=train, 
+         importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+summary(rf)
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+###############Neural Network MOdels##############
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1")
+source("HumanNumbers.R")
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak,
+       weekday,headway_avg,deviation_avg,headway_sd,deviation_sd))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+         yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+         mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:60,]
+concrete_test<-concrete_norm[60:87,]
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:8])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', pch=16, 
+           ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) / 
+ nrow(concrete_test)) ^ 0.5 
+ cor(predicted_strength,concrete_test$passengers_avg)
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:8])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+      ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(pred_strn_5,concrete_test$passengers_avg)
+
+```
+
+**16) R codes for Method 1-Balancing ratio-0.8 models**
+```
+list.files()
+# Initialise
+cat('\14'); rm(list=ls());graphics.off(); 
+# source('easyDBaccess.R'); saveRDS(df, "routes_aggr.rds")
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1")
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+       yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+           mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+# prepare data (for a specific group)
+#S = readRDS('routes_aggr.rds')
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, weekday))
+# define train (and test) rows
+nr = length(unique(T$route)); nt=floor(.8*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+summary(b)
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, subset=train, 
+         importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+#####NeuralNetwork Models######
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, weekday))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+            yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+             mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:68,]
+concrete_test<-concrete_norm[69:87,]
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:10])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', 
+         pch=16, ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) 
+/nrow(concrete_test)) ^ 0.5 cor(predicted_strength,concrete_test$passengers_avg)
+plot(predicted_strength,concrete_test$passengers_avg)
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:10])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+         ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) / 
+       nrow(concrete_test)) ^ 0.5
+cor(pred_strn_5,concrete_test$passengers_avg)
+
+```
+**17) Rcodes for Method 2-Balancing ratio-0.8 models**
+```
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, 
+         weekday,headway_avg,deviation_avg))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+            yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+    mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+nr = length(unique(T$route)); nt=floor(.8*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+#summary()
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, 
+           subset=train, importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+######NeuralNetwork Model####
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak, 
+           weekday,headway_avg,deviation_avg))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+            yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+          mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:68,]
+concrete_test<-concrete_norm[69:87,]
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:10])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', 
+            pch=16, ylab = "predicted passenger NN", xlab = "real passenger")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(predicted_strength,concrete_test$passengers_avg)
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:10])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+           ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(pred_strn_5,concrete_test$passengers_avg)
+```
+
+**18) R codes for Method 3-Balancing ratio-0.8 models**
+
+```
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive - University of Surrey//Desktop//Sem 1")
+source("HumanNumbers.R")
+S=read.csv("C://Users//vr00214//OneDrive - 
+University of Surrey//Desktop//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak,
+         weekday,headway_avg,deviation_avg,headway_sd,deviation_sd))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+          yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+        mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+nr = length(unique(T$route)); nt=floor(.8*nr);
+set.seed(1); train = sample(1:nr, nt);
+## A few default models: LM, LR, DT and RF
+# linear model
+m1 <- lm ( passengers_avg~., data = U[train,])
+yh  = predict(m1, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+summary(m1)
+derr(y,yh,"LM: "); aplot(y,yh,"LM")
+# linear regression (normal equation)
+p_load(MASS)
+ya = U$passengers_avg[train]
+pX = U %>% dplyr::select(-c(passengers_avg))
+X = as.matrix( pX[train,]) 
+b = ginv(t(X) %*% X) %*% t(X) %*% ya
+y = U$passengers_avg[-train]
+Xt = as.matrix( pX[-train,]) 
+yh = Xt %*% b
+derr(y,yh,"LR: "); aplot(y,yh,"LR")
+summary(b)
+# in theory this should be the same as LM, 
+# but the underlying calculations differ
+# decision tree
+p_load(tree)
+dt = tree(passengers_avg~., data = U, subset=train)
+yh  = predict(dt, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"DT: "); aplot(y,yh,"DT")
+summary(dt)
+# random forest
+p_load(randomForest)
+set.seed(1); # fix random number
+rf = randomForest(formula = passengers_avg~., data = U, subset=train, 
+      importance = TRUE)
+yh  = predict(rf, newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"RF: "); aplot(y,yh,"RF")
+summary(rf)
+I = importance(rf);I = I[order(-I[,1]),]
+varImpPlot(rf)
+###svm
+#install.packages("kernlab")
+#install.packages("caret")
+library(kernlab)
+library(caret)
+model_rfdot_svm<-ksvm(passengers_avg~.,data = U,kernel = "rbfdot")
+yh<-predict(model_rfdot_svm,newdata=U[-train,])
+y   = U$passengers_avg[-train]
+derr(y,yh,"SVM: "); aplot(y,yh,"SVM")
+#######NEURAL NETWORK MODELS#####
+library(pacman); p_load(tidyverse)
+getwd()
+setwd("C://Users//vr00214//OneDrive -University of Surrey//Desktop//Sem 1")
+source("HumanNumbers.R")
+S=read.csv("C://Users//vr00214//OneDrive - University of Surrey//Desktop
+//Sem 1//DA2//routes_aggr_distinct1.csv")
+#Best subsets regression
+S$lghd<-log(S$headway_avg)
+S$lgdv<-log(S$deviation_avg)
+T = S %>% filter(peak == "Peak", weekday == "Weekday")
+U = T %>% dplyr::select(-c(X,bus_operator, route, peak,
+    weekday,headway_avg,deviation_avg,headway_sd,deviation_sd))
+source("HumanNumbers.R")
+rmse  <- function(y,yh) {sqrt(mean((y-yh)^2))}
+mape  <- function(y,yh) {mean(abs((y-yh)/y))} # y=actual value, 
+       yh=modelled value (note issue when y is zero!)
+frmse <- function(y,yh) {fmt(rmse(y,yh))}
+fmape <- function(y,yh) {fmt(mape(y,yh)*100,'%')}
+derr  <- function(y,yh,model="") {disp(model,'rmse=',frmse(y,yh),', 
+       mape=',fmape(y,yh))}
+aplot <- function(y,yh, main="") {
+  plot(y, yh, pch='.', cex=8, col = 'black', 
+       ylab = "modelled", xlab = "observed",main=main); 
+  abline(0,1, lwd=3, col='red');
+}
+normalize<-function(x){
+  return ( (x-min(x))/(max(x)-min(x)))
+}
+concrete_norm<-as.data.frame(lapply(U,FUN=normalize))
+summary(concrete_norm$passengers_avg)
+concrete_train<-concrete_norm[1:68,]
+concrete_test<-concrete_norm[69:87,]
+# Using multilayered feed forward nueral network
+# package nueralnet
+#install.packages("neuralnet")
+#install.packages("nnet")
+library(neuralnet)
+library(nnet)
+# Building model
+concrete_model <- neuralnet(passengers_avg~.,data = concrete_train)
+str(concrete_model)
+plot(concrete_model)
+# SSE sum of squared errors . least SSE best model
+# Evaluating model performance
+# compute function to generate ouput for the model prepared
+model_results <- compute(concrete_model,concrete_test[2:8])
+predicted_strength <- model_results$net.result
+predicted_strength
+plot(concrete_test$passengers_avg, predicted_strength, col='blue', 
+       pch=16, ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - predicted_strength)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(predicted_strength,concrete_test$passengers_avg)
+# New model
+model_5<-neuralnet(passengers_avg~.,data= concrete_norm,hidden = c(5,3))
+plot(model_5)
+model_5_res<-compute(model_5,concrete_test[2:8])
+pred_strn_5<-model_5_res$net.result
+plot(concrete_test$passengers_avg, pred_strn_5, col='blue', pch=16, 
+          ylab = "predicted passengers NN", xlab = "real passengers")
+abline(0,1)
+RMSE.NN = (sum((concrete_test$passengers_avg - pred_strn_5)^2) / 
+nrow(concrete_test)) ^ 0.5 cor(pred_strn_5,concrete_test$passengers_avg)
+
+```
+
+
+
+# Bibliography
+

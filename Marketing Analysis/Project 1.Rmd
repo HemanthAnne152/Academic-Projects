@@ -1,0 +1,249 @@
+---
+title: "Office"
+subtitle: "Marketing Analytics"
+    self-contained : yes
+    fig_caption: yes
+    highlight: pygments
+    theme: flatly
+    toc: yes
+    toc_depth: 2
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = T, comment = NA, message = F, warning = F, fig.align = "center")
+options(pillar.sigfig = 7)
+options(scipen = 999)
+```
+
+----
+
+
+
+```{r}
+
+library(tidyverse) # for data wrangling and visualization
+library(NbClust) # for determining the best number of clusters
+library(janitor) # for tabyl
+library(flexclust) # for segment profile plot
+```
+
+----
+
+```{r}
+Data_Office <- read_csv("office.csv") %>% as_tibble()
+```
+
+Now let's inspect our data.
+
+```{r}
+glimpse(Data_Office)
+summary(Data_Office)
+```
+
+converting the `MBA` and `Choice` variables to factors and run the `summary` function again.
+
+```{r}
+Data_Office_1 <- Data_Office %>% 
+  mutate(professional = factor(professional)) %>% as_tibble()
+
+glimpse(Data_Office)        
+summary(Data_Office_1)
+```
+
+
+```{r}
+Data_Office_scale <- scale(Data_Office_1[, c("variety_of_choice",
+                           "electronics",
+                           "furniture",
+                           "quality_of_service",
+                           "low_prices",
+                           "return_policy")]) %>% 
+  as_tibble()
+glimpse(Data_Office_scale)
+summary(Data_Office_scale)
+```
+
+
+```{r}
+
+dist <- dist(Data_Office_scale, 
+             method = "euclidean")
+
+
+as.matrix(dist)[1:6, 1:6]
+```
+
+
+```{r}
+set.seed(123)
+
+hc <- hclust(dist, method = "ward.D2")
+
+
+hc
+
+
+plot(hc)
+
+rect.hclust(hc, k = 6, border = "blue")
+
+hc6 <- cutree(hc, k = 6)
+```
+
+```{r}
+table(hc6)
+```
+
+```{r}
+Data_Office_scale %>% # take the std data
+  mutate(hc6 = factor(hc6)) %>% # add the cluster assignment
+  group_by(hc6) %>% # group by cluster
+  mutate(n = n()) %>% # calculate the n per group 
+  summarise_all(~ mean(.x)) %>% # calculate the mean per group 
+  mutate(prop = n/sum(n)) %>% # calculate the prop per group 
+  print(width = Inf) # print all columns
+
+```
+  
+  
+
+```{r}
+hc6_flex <- as.kcca(hc, Data_Office_scale, k = 6)
+```
+#2 cluster memberships have changed
+
+```{r}
+barchart(hc6_flex)
+```
+
+
+```{r}
+table(hc6, clusters(hc6_flex))
+
+
+```
+
+```{r}
+
+plot(hc)
+
+rect.hclust(hc, k = 5, border = "blue")
+
+hc5 <- cutree(hc, k = 5)
+
+Data_Office_scale %>% # take the std data
+  mutate(hc5 = factor(hc5)) %>% # add the cluster assignment
+  group_by(hc5) %>% # group by cluster
+  mutate(n = n()) %>% # calculate the n per group 
+  summarise_all(~ mean(.x)) %>% # calculate the mean per group 
+  mutate(prop = n/sum(n)) %>% # calculate the prop per group 
+  print(width = Inf) # print all columns
+```
+
+
+
+```{r}
+hc5_flex <- as.kcca(hc, Data_Office_scale, k = 5)
+barchart(hc5_flex)
+table(hc5, clusters(hc5_flex))
+```
+
+
+
+```{r}
+hc5 <- factor(hc5, 
+              levels = c(1, 2, 3, 4, 5),
+              labels = c(" furniture and variety of choices HC", "low prices HC", "return policy HC", "electronic HC", "quality of services HC" ))
+```
+
+
+
+
+```{r}
+Data_Office <- Data_Office %>% mutate(hc5=hc5)
+```
+```{r}
+Data_Office %>%
+  tabyl(hc5, professional) %>% 
+  adorn_totals(c("row", "col")) %>% 
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns() 
+```
+
+
+```{r}
+Data_Office %>%
+  tabyl(hc5, income) %>% 
+  adorn_totals(c("row", "col")) %>% 
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns() 
+```
+
+```{r}
+Data_Office %>%
+  tabyl(hc5, age) %>% 
+  adorn_totals(c("row", "col")) %>% 
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns() 
+```
+
+
+```{r}
+set.seed(123) # for reproducibility
+
+# run the kmeans function
+km <- kmeans(Data_Office_scale, 
+             centers = 5, # numner of clusters
+             iter.max = 1000,
+             nstart = 100)
+
+# print the cluster object
+km
+```
+
+```{r}
+km5 <- factor(
+  km$cluster,
+  levels = c(1, 2, 3, 4, 5),
+  labels = c("low prices KM", 
+             "return policy KM",
+             "electronic KM",
+             "quality of services KM",
+             "furniture and variety of choices KM"))
+```
+
+
+```{r}
+Data_Office <- Data_Office %>% mutate(km5 = km5)
+```
+
+
+
+```{r}
+Data_Office %>%
+  tabyl(km5, hc5) %>% 
+  adorn_totals(c("row", "col")) %>% 
+  adorn_percentages("row") %>%
+  adorn_pct_formatting(digits = 2) %>%
+  adorn_ns()
+```
+
+```{r}
+hitrate<- ((60+17+33+29+59)*100/200)
+hitrate
+
+```
+
+
+
+
+
+
+
+
+

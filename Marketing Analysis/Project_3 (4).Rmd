@@ -1,0 +1,264 @@
+---
+title: "Cloud"
+subtitle: "Marketing Analytics"
+output:
+  html_document:
+    self-contained : yes
+    fig_caption: yes
+    highlight: pygments
+    theme: flatly
+    toc: yes
+    toc_depth: 2
+    toc_float:
+      collapsed: no
+      smooth_scroll: yes
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = T, comment = NA, message = F, warning = F, fig.align = "center")
+options(pillar.sigfig = 7)
+options(scipen = 999)
+```
+
+
+
+## Libraries
+
+```{r}
+library(tidyverse) # for data wrangling and visualization
+library(ggpubr) # theme_pubr()
+library(broom) # for tidy model output
+library(dfidx) # for indexed data frames
+library(mlogit) # for multinomial logit
+
+```
+
+----
+
+
+```{r}
+# read the data
+Data_Cloud <- read.csv("cloud.csv",
+                 stringsAsFactors = T) # automatically converts strings to factors
+                 
+
+# convert to tibble
+Data_Cloud <- as_tibble(Data_Cloud)
+```
+
+Now let's inspect the data.
+
+```{r}
+# glimpse
+glimpse(Data_Cloud)
+
+# summary
+summary(Data_Cloud)
+```
+
+```{r}
+Data_Cloud$cloud_storage <- relevel(Data_Cloud$cloud_storage, ref = '30gb')
+Data_Cloud$price <- relevel(Data_Cloud$price, ref = 'p6')
+```
+
+```{r}
+Data_Cloud$price_n <- Data_Cloud$price
+
+Data_Cloud <- Data_Cloud %>% 
+  mutate(price_n = gsub("p", "", price_n), # remove character 'p' from
+         price_n = as.numeric(price_n))
+
+summary(Data_Cloud)
+
+```
+```{r}
+percentage_30gb<-((2999*100/(2999+3001+3000)))
+
+percentage_30gb
+
+```
+
+
+----
+
+
+```{r}
+# shape data for mlogit
+m_data <- dfidx(Data_Cloud, # the data set to use
+                choice = "choice", # variable that contains choice
+                idx = list(c("choice_id", "respondent_id"), # the two indexes (choice set and consumer) that define unique obs
+                           "alternative_id")) # the levels of the alternatives
+
+# print
+Data_Cloud
+```
+
+
+
+```{r}
+# set a 123 seed to ensure replicability
+set.seed(123) 
+
+# build the model using m_data
+# 0 tells model to exclude intercept
+model <- mlogit(choice ~ 0 + 
+                  cloud_storage + 
+                  customer_support + 
+                  cloud_services + price, 
+                data = m_data) 
+
+model
+```
+
+Let's print the coefficients table
+
+```{r}
+summary(model)$CoefTable
+```
+
+
+
+```{r}
+# set a 123 seed to ensure replicability
+set.seed(123) 
+
+# build the model using m_data
+# 0 tells model to exclude intercept
+model2 <- mlogit(choice ~ 0 + 
+                  cloud_storage + 
+                  customer_support + 
+                  cloud_services + price_n, 
+                data = m_data) 
+
+model2
+
+summary(model2)$CoefTable
+```
+
+
+
+```{r}
+# likelihood-ratio test
+lrtest(model, model2)
+```
+
+```{r}
+head(predict(model2, m_data), 1)
+```
+
+
+```{r}
+predicted_probabilities <- predict(model2, m_data) %>% 
+  as_tibble()
+
+# print the predictions
+predicted_probabilities
+```
+
+```{r}
+predicted_alternative <-
+  predicted_probabilities %>% 
+  rowid_to_column("choice_id") %>% 
+  pivot_longer(!choice_id, names_to = "choice", values_to = "prob") %>% 
+  group_by(choice_id) %>% 
+  slice(which.max(prob)) %>% 
+  ungroup() %>% 
+  select(choice) %>% 
+  as_vector()
+# print the predictions
+predicted_alternative
+
+```
+
+
+```{r}
+selected_alternative <- 
+ Data_Cloud %>% 
+  filter(choice > 0) %>% 
+  select(alternative_id) %>% 
+  as_vector()
+
+selected_alternative
+```
+
+
+```{r}
+table(selected_alternative, predicted_alternative)
+```
+
+
+
+
+```{r}
+
+predict.share <- function(model, d) {
+  temp <- model.matrix(update(model$formula, 0 ~ .), data = d)[, -1] # generate dummy matrix
+  u <- temp %*% model$coef[colnames(temp)] # calculate utilities
+  probs <- t(exp(u) / sum(exp(u))) # calculate probabilities
+  colnames(probs) <- paste("alternative", colnames(probs))
+  return(probs)
+}
+```
+
+
+```{r}
+d_base <- Data_Cloud[
+  c("410", "445", "137", "430","526" ),
+  c("cloud_storage", "customer_support", "cloud_services", "price_n") # take attribute columns
+  ]
+# print
+d_base
+```
+
+```{r}
+
+d_base <- cbind(d_base, as.vector(predict.share(model2, d_base)))
+
+# print
+d_base
+
+# change the column name
+colnames(d_base)[5] <- "predicted_share"
+
+# print
+d_base
+```
+
+
+```{r}
+
+d_one<- d_base
+
+
+d_one[5, "cloud_services"] <- "email, video"
+
+
+d_one$predicted_share <- as.vector(predict.share(model2, d_one))
+
+# print
+d_one
+
+```
+
+
+
+```{r}
+modification_percentage<- (d_one[,"predicted_share"]-d_base[,"predicted_share"])*100
+modification_percentage
+```
+
+
+```{r}
+# How much consumer is willing ro pay for customer support
+- (coef(model2)["customer_supportyes"]) / coef(model2)["price_n"]
+
+# Upgrade from 30gb to 2000gb cloud storage
+- (coef(model2)["cloud_storage2000gb"]) / coef(model2)["price_n"]
+
+# Upgrade from 2000gb to 5000gb cloud storage
+-((coef(model2)["cloud_storage5000gb"])- (coef(model2)["cloud_storage2000gb"])) / coef(model2)["price_n"]
+```
+
+----
+
+<div class="tocify-extend-page" data-unique="tocify-extend-page" style="height: 0;"></div>
